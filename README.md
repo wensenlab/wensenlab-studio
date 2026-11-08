@@ -17,7 +17,9 @@
 
 ## 在线 Demo
 
-开启 GitHub Pages 后，把链接填在这里。Demo 打开就能用，你录入的内容只存在你自己的浏览器里，不会上传到任何地方。
+👉 **[在线体验](https://wensenlab.github.io/wensenlab-studio/)**
+
+Demo 打开就能用，你录入的内容只存在你自己的浏览器里，不会上传到任何地方。
 
 ## 本地使用
 
