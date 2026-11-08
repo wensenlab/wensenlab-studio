@@ -1,0 +1,724 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="color-scheme" content="light">
+<link rel="icon" href="data:,">
+<title>WenSenLab 工作台 · 开源版</title>
+<style>
+:root{
+  --bg1:#eef5ff; --bg2:#f7fbff; --bg3:#ffffff;
+  --ink:#16233a; --ink2:#3d4f6b; --muted:#7a8aa3; --faint:#9db0c9;
+  --line:rgba(120,165,225,.22); --line2:rgba(120,165,225,.14);
+  --card:rgba(255,255,255,.78); --card-solid:#ffffff;
+  --blue:#2f6fed; --blue-d:#1f56c9; --blue-soft:rgba(219,234,254,.55); --blue-softer:rgba(219,234,254,.32);
+  --blue-chip:#eaf2ff; --ok:#1a9e6b; --warn:#d98a1f; --pink:#e35d8a;
+  --radius:18px; --shadow:0 8px 30px rgba(70,120,200,.07), 0 1px 3px rgba(70,120,200,.05);
+  --font:-apple-system,BlinkMacSystemFont,"PingFang SC","Hiragino Sans GB","Microsoft YaHei","Noto Sans SC",sans-serif;
+}
+*{box-sizing:border-box}
+html,body{margin:0;padding:0}
+body{font-family:var(--font);color:var(--ink);background:linear-gradient(180deg,var(--bg1) 0%,var(--bg2) 340px,var(--bg3) 900px);min-height:100vh;-webkit-font-smoothing:antialiased;font-size:15px;line-height:1.65}
+button,input,select,textarea{font-family:inherit;font-size:inherit;color:inherit}
+a{color:var(--blue);text-decoration:none}
+.app{display:flex;min-height:100vh}
+/* ---------- sidebar ---------- */
+.sidebar{width:248px;flex:0 0 248px;position:sticky;top:0;height:100vh;display:flex;flex-direction:column;padding:26px 18px 20px;border-right:1px solid var(--line2);background:rgba(255,255,255,.45);backdrop-filter:blur(14px)}
+.brand{display:flex;align-items:center;gap:11px;padding:2px 8px 20px}
+.brand-mark{width:38px;height:38px;border-radius:11px;background:linear-gradient(135deg,#4a86f5,#2f6fed);color:#fff;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:19px;box-shadow:0 6px 16px rgba(47,111,237,.28)}
+.brand-name{font-size:19px;font-weight:650;letter-spacing:.2px;line-height:1.15}
+.brand-sub{font-size:12px;color:var(--muted)}
+.nav-label{font-size:11.5px;color:var(--faint);letter-spacing:.14em;padding:8px 10px 6px}
+.nav{display:flex;flex-direction:column;gap:3px}
+.nav button{display:flex;align-items:center;gap:11px;padding:10px 12px;border:0;background:transparent;border-radius:12px;cursor:pointer;font-size:14.5px;color:var(--ink2);text-align:left;width:100%}
+.nav button svg{flex:0 0 auto;opacity:.75}
+.nav button:hover{background:rgba(219,234,254,.45)}
+.nav button.active{background:var(--blue-chip);color:var(--ink);font-weight:600}
+.nav .count{margin-left:auto;background:rgba(255,255,255,.85);border:1px solid var(--line);color:var(--muted);font-size:11.5px;padding:0 8px;border-radius:999px;line-height:20px}
+.side-card{margin-top:auto;background:var(--blue-softer);border:1px solid var(--line2);border-radius:16px;padding:16px}
+.side-card h4{margin:0 0 6px;font-size:15px;font-weight:600}
+.side-card p{margin:0 0 10px;font-size:13px;color:var(--ink2)}
+.side-card button{background:none;border:0;color:var(--blue);cursor:pointer;padding:0;font-size:13.5px;font-weight:550}
+.side-foot{padding:14px 8px 0;font-size:12.5px;color:var(--muted);display:flex;align-items:center;gap:8px}
+.dot{width:7px;height:7px;border-radius:50%;background:var(--ok);display:inline-block}
+/* ---------- main ---------- */
+.main{flex:1;min-width:0;padding:0 34px 70px}
+.topbar{display:flex;align-items:center;gap:10px;padding:20px 0 6px;font-size:13.5px;color:var(--muted)}
+.topbar .crumb-now{color:var(--ink);font-weight:550}
+.topbar .spacer{flex:1}
+.local-tag{font-size:12.5px;color:var(--muted);display:flex;align-items:center;gap:6px}
+.btn{display:inline-flex;align-items:center;gap:7px;border-radius:999px;border:1px solid var(--line);background:rgba(255,255,255,.8);padding:9px 18px;cursor:pointer;font-size:14px;font-weight:550;transition:background .15s,border-color .15s}
+.btn:hover{background:#fff;border-color:rgba(120,165,225,.45)}
+.btn.primary{background:var(--blue);border-color:var(--blue);color:#fff;box-shadow:0 6px 18px rgba(47,111,237,.25)}
+.btn.primary:hover{background:var(--blue-d)}
+.btn.small{padding:6px 14px;font-size:13px}
+.btn.ghost{border-color:transparent;background:transparent;color:var(--blue)}
+.btn.danger{color:#c0392b}
+.view{display:none}
+.view.active{display:block;animation:fade .25s ease}
+@keyframes fade{from{opacity:0;transform:translateY(4px)}to{opacity:1;transform:none}}
+@media (prefers-reduced-motion:reduce){.view.active{animation:none}}
+.eyebrow{font-size:11.5px;letter-spacing:.22em;color:var(--faint);font-weight:600;margin:26px 0 8px}
+h1.hero{font-size:34px;font-weight:600;letter-spacing:-.01em;margin:0 0 8px;line-height:1.25}
+.hero-sub{color:var(--ink2);margin:0 0 26px;font-size:15.5px}
+.page-head{display:flex;align-items:flex-end;gap:16px;flex-wrap:wrap;margin:26px 0 6px}
+.page-head h1{font-size:27px;font-weight:600;margin:0}
+.page-head p{color:var(--ink2);margin:4px 0 0;width:100%}
+/* stat cards */
+.stats{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin:6px 0 18px}
+.stat{background:var(--card);border:1px solid var(--line2);border-radius:var(--radius);padding:18px 20px;box-shadow:var(--shadow);backdrop-filter:blur(8px)}
+.stat .lbl{font-size:13.5px;color:var(--ink2);display:flex;justify-content:space-between;align-items:center}
+.stat .num{font-size:38px;font-weight:300;line-height:1.2;margin:6px 0 2px}
+.stat .hint{font-size:12.5px;color:var(--muted)}
+/* banner */
+.banner{background:linear-gradient(120deg,rgba(219,234,254,.75),rgba(235,244,255,.45) 60%,rgba(255,255,255,.4));border:1px solid var(--line2);border-radius:22px;padding:30px 32px;position:relative;overflow:hidden;margin-bottom:30px}
+.banner .tag{display:inline-block;font-size:12px;color:var(--blue-d);border:1px solid rgba(47,111,237,.3);background:rgba(255,255,255,.6);border-radius:8px;padding:2px 10px;margin-bottom:12px}
+.banner h2{font-size:25px;font-weight:600;margin:0 0 10px}
+.banner p{margin:0 0 14px;color:var(--ink2);max-width:520px}
+.banner .link{color:var(--blue-d);font-weight:550;cursor:pointer;background:none;border:0;padding:0;font-size:14.5px}
+.banner-art{position:absolute;right:34px;top:50%;transform:translateY(-50%);width:270px;height:130px;pointer-events:none}
+.mini-card{position:absolute;background:rgba(255,255,255,.9);border:1px solid var(--line);border-radius:12px;box-shadow:0 10px 24px rgba(70,120,200,.12);padding:12px 14px;font-size:12.5px;color:var(--ink2)}
+.chips{display:flex;gap:6px;margin-top:8px}
+.chips span{background:var(--blue-chip);border-radius:7px;padding:2px 9px;font-size:11.5px;color:var(--blue-d);white-space:nowrap}
+/* sections */
+.sec-head{display:flex;align-items:center;gap:10px;margin:28px 0 14px}
+.sec-head h3{font-size:19px;font-weight:600;margin:0}
+.sec-head .n{background:var(--blue-chip);color:var(--blue-d);border-radius:8px;font-size:12px;padding:1px 8px}
+.sec-head .spacer{flex:1}
+.sec-head .link{font-size:13.5px;color:var(--ink2);cursor:pointer;background:none;border:0}
+/* filters */
+.tabs{display:flex;gap:4px;flex-wrap:wrap;border-bottom:1px solid var(--line2);padding-bottom:0}
+.tabs button{border:0;background:none;padding:9px 13px;cursor:pointer;font-size:14px;color:var(--muted);border-bottom:2px solid transparent;margin-bottom:-1px}
+.tabs button.active{color:var(--ink);font-weight:600;border-bottom-color:var(--blue)}
+.filter-row{display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin:14px 0 18px}
+.filter-row select,.search-box input{border:1px solid var(--line);border-radius:10px;background:rgba(255,255,255,.85);padding:8px 12px;font-size:13.5px}
+.search-box{margin-left:auto;position:relative}
+.search-box input{padding-left:32px;width:230px;border-radius:999px}
+.search-box svg{position:absolute;left:11px;top:50%;transform:translateY(-50%);opacity:.5}
+/* topic cards */
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:14px}
+.tcard{background:var(--card);border:1px solid var(--line2);border-radius:var(--radius);padding:18px 20px;box-shadow:var(--shadow);cursor:pointer;backdrop-filter:blur(8px)}
+.tcard:hover{border-color:rgba(120,165,225,.45)}
+.tcard h4{margin:8px 0 6px;font-size:16.5px;font-weight:600;line-height:1.4}
+.tcard p{margin:0 0 12px;font-size:13.5px;color:var(--ink2);display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.tcard .meta{display:flex;gap:8px;align-items:center;font-size:12px;color:var(--muted);flex-wrap:wrap}
+.pill{display:inline-block;font-size:11.5px;padding:2px 10px;border-radius:999px;background:var(--blue-chip);color:var(--blue-d)}
+.pill.p-高{background:#fdeef3;color:#b03a63}
+.pill.p-中{background:var(--blue-chip);color:var(--blue-d)}
+.pill.p-低{background:#eef2f7;color:var(--muted)}
+.pill.st-已发布{background:#e5f6ee;color:#14714e}
+.pill.st-待校对{background:#fdf3e2;color:#9a6410}
+.pill.st-创作中{background:var(--blue-chip);color:var(--blue-d)}
+.pill.st-灵感池{background:#eef2f7;color:var(--muted)}
+.progress{height:5px;background:rgba(120,165,225,.16);border-radius:99px;margin-top:12px;overflow:hidden}
+.progress i{display:block;height:100%;background:var(--blue);border-radius:99px}
+.empty{border:1.5px dashed rgba(120,165,225,.4);border-radius:22px;padding:56px 24px;text-align:center;background:rgba(255,255,255,.4)}
+.empty h3{font-size:19px;font-weight:600;margin:10px 0 6px}
+.empty p{color:var(--ink2);margin:0 0 20px}
+.empty .row{display:flex;gap:14px;justify-content:center;align-items:center;flex-wrap:wrap}
+/* templates */
+.tpl-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:14px}
+.tpl{background:var(--card);border:1px solid var(--line2);border-radius:var(--radius);padding:18px 20px;box-shadow:var(--shadow)}
+.tpl .ic{width:42px;height:42px;border-radius:12px;background:var(--blue-softer);display:flex;align-items:center;justify-content:center;color:var(--blue-d);margin-bottom:10px}
+.tpl h4{margin:0 0 4px;font-size:15.5px;font-weight:600}
+.tpl p{margin:0 0 12px;font-size:13px;color:var(--muted)}
+.tpl button{border:0;background:none;color:var(--blue);cursor:pointer;font-weight:600;font-size:13.5px;padding:0}
+/* production */
+.back-btn{background:none;border:0;color:var(--ink2);cursor:pointer;font-size:14px;padding:0;display:inline-flex;gap:6px;align-items:center;margin-top:22px}
+.detail-head{margin:14px 0 4px}
+.detail-head input.title-in{width:100%;border:0;background:transparent;font-size:26px;font-weight:600;padding:4px 0;outline:none}
+.detail-head input.title-in:focus{border-bottom:2px solid var(--blue)}
+.meta-row{display:flex;gap:10px;flex-wrap:wrap;margin:10px 0 20px}
+.meta-row label{font-size:12.5px;color:var(--muted);display:flex;flex-direction:column;gap:4px}
+.meta-row select{border:1px solid var(--line);border-radius:10px;background:rgba(255,255,255,.85);padding:7px 10px;font-size:13.5px}
+.steps{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:18px}
+.steps button{border:1px solid var(--line);background:rgba(255,255,255,.7);border-radius:999px;padding:8px 18px;cursor:pointer;font-size:14px;font-weight:550;color:var(--ink2)}
+.steps button.active{background:var(--blue);border-color:var(--blue);color:#fff}
+.steps button .done{color:var(--ok)}
+.steps button.active .done{color:#bfe9d4}
+.panel{background:var(--card);border:1px solid var(--line2);border-radius:20px;padding:24px;box-shadow:var(--shadow);backdrop-filter:blur(8px)}
+.panel h3{margin:0 0 4px;font-size:18px;font-weight:600}
+.panel .sub{color:var(--muted);font-size:13.5px;margin:0 0 18px}
+.f3{display:grid;grid-template-columns:repeat(3,1fr);gap:14px}
+.field{margin-bottom:16px}
+.field label{display:block;font-size:13.5px;font-weight:600;margin-bottom:6px}
+.field label .tip{font-weight:400;color:var(--muted);font-size:12.5px}
+.field textarea,.field input[type=text]{width:100%;border:1px solid var(--line);border-radius:12px;background:rgba(255,255,255,.9);padding:11px 13px;font-size:14px;line-height:1.6;resize:vertical}
+.field textarea:focus,.field input:focus{outline:2px solid rgba(47,111,237,.35);border-color:transparent}
+.fact-box{border-top:3px solid var(--blue)}
+.judge-box{border-top:3px solid #7fb0f7}
+.spec-box{border-top:3px solid #c3d9fa}
+.plat-tabs{display:flex;gap:8px;margin-bottom:16px;flex-wrap:wrap}
+.plat-tabs button{border:1px solid var(--line);background:#fff;border-radius:999px;padding:7px 16px;cursor:pointer;font-size:13.5px}
+.plat-tabs button.active{background:var(--blue-chip);border-color:rgba(47,111,237,.4);color:var(--blue-d);font-weight:600}
+.check-list,.todo-list{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:8px}
+.check-list li,.todo-list li{display:flex;gap:11px;align-items:flex-start;background:rgba(255,255,255,.75);border:1px solid var(--line2);border-radius:12px;padding:11px 14px;font-size:14px}
+.tgl{flex:0 0 auto;width:21px;height:21px;border-radius:7px;border:1.5px solid rgba(120,165,225,.55);background:#fff;cursor:pointer;display:flex;align-items:center;justify-content:center;color:#fff;font-size:13px;margin-top:1px;padding:0}
+.tgl.on{background:var(--ok);border-color:var(--ok)}
+.todo-list li.done span{text-decoration:line-through;color:var(--muted)}
+.todo-list .del{margin-left:auto;background:none;border:0;color:var(--faint);cursor:pointer;font-size:15px}
+.add-row{display:flex;gap:8px;margin-top:12px}
+.add-row input{flex:1;border:1px solid var(--line);border-radius:999px;padding:9px 16px;background:rgba(255,255,255,.9)}
+.ver-list{font-size:13px;color:var(--ink2)}
+.ver-list div{padding:8px 0;border-bottom:1px solid var(--line2)}
+.ver-list div:last-child{border-bottom:0}
+.two-col{display:grid;grid-template-columns:1fr 1fr;gap:22px}
+/* example flow */
+.flow{display:flex;flex-direction:column;gap:0;max-width:820px}
+.fstep{display:flex;gap:18px}
+.fstep .rail{display:flex;flex-direction:column;align-items:center}
+.fstep .n{width:34px;height:34px;border-radius:50%;background:var(--blue);color:#fff;display:flex;align-items:center;justify-content:center;font-weight:600;font-size:14px;flex:0 0 auto}
+.fstep .line{width:2px;flex:1;background:rgba(120,165,225,.25);margin:4px 0}
+.fstep:last-child .line{display:none}
+.fstep .body{padding-bottom:26px;flex:1;min-width:0}
+.fstep h4{margin:4px 0 6px;font-size:16.5px;font-weight:600}
+.fstep p{margin:0 0 8px;color:var(--ink2);font-size:14px}
+.fstep .ex{background:var(--blue-softer);border:1px solid var(--line2);border-radius:14px;padding:13px 16px;font-size:13.5px;color:var(--ink2)}
+.fstep .ex b{color:var(--ink)}
+/* data bar */
+.data-bar{display:flex;gap:10px;flex-wrap:wrap;align-items:center;background:var(--card);border:1px solid var(--line2);border-radius:16px;padding:16px 20px;box-shadow:var(--shadow);margin-top:26px}
+.data-bar p{margin:0;font-size:13px;color:var(--muted);flex:1;min-width:220px}
+/* modal */
+.overlay{position:fixed;inset:0;background:rgba(30,50,90,.32);backdrop-filter:blur(3px);display:none;align-items:flex-start;justify-content:center;padding:6vh 16px;z-index:50}
+.overlay.open{display:flex}
+.modal{background:#fff;border-radius:22px;width:560px;max-width:100%;padding:26px 28px;box-shadow:0 24px 60px rgba(30,50,90,.25);max-height:86vh;overflow:auto}
+.modal h3{margin:0 0 4px;font-size:20px;font-weight:600}
+.modal .sub{color:var(--muted);font-size:13.5px;margin:0 0 18px}
+.modal .row2{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.modal .foot{display:flex;gap:10px;justify-content:flex-end;margin-top:8px}
+.toast{position:fixed;left:50%;bottom:26px;transform:translateX(-50%) translateY(20px);background:#16233a;color:#fff;padding:11px 22px;border-radius:999px;font-size:14px;opacity:0;pointer-events:none;transition:.25s;z-index:99}
+.toast.show{opacity:1;transform:translateX(-50%)}
+.mobile-top{display:none}
+@media (max-width:900px){
+  .stats{grid-template-columns:repeat(2,1fr)}
+  .f3,.two-col{grid-template-columns:1fr}
+  .banner-art{display:none}
+}
+@media (max-width:720px){
+  .sidebar{display:none}
+  .topbar{display:none}
+  .main{padding:0 18px 60px}
+  .mobile-top{display:flex;align-items:center;gap:10px;padding:16px 0 4px}
+  .mobile-nav{display:flex;gap:6px;overflow-x:auto;padding:10px 0 4px;scrollbar-width:none}
+  .mobile-nav::-webkit-scrollbar{display:none}
+  .mobile-nav button{flex:0 0 auto;border:1px solid var(--line);background:rgba(255,255,255,.8);border-radius:999px;padding:7px 15px;font-size:13.5px;cursor:pointer}
+  .mobile-nav button.active{background:var(--blue);color:#fff;border-color:var(--blue)}
+  h1.hero{font-size:27px}
+  .search-box{margin-left:0;width:100%}
+  .search-box input{width:100%}
+  .topbar .local-tag{display:none}
+}
+@media (min-width:721px){.mobile-nav{display:none}}
+</style>
+</head>
+<body>
+<div class="app">
+  <!-- Sidebar -->
+  <aside class="sidebar">
+    <div class="brand">
+      <div class="brand-mark">W</div>
+      <div><div class="brand-name">WenSenLab</div><div class="brand-sub">文森策 · 内容工作台</div></div>
+    </div>
+    <div class="nav-label">创作空间</div>
+    <nav class="nav" id="sideNav">
+      <button data-view="home" class="active"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/></svg>工作概览</button>
+      <button data-view="pool"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 3l9 5-9 5-9-5 9-5z"/><path d="M3 13l9 5 9-5"/></svg>选题池<span class="count" id="navCount">0</span></button>
+      <button data-view="desk"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 013 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>生产台</button>
+      <button data-view="templates"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 19.5A2.5 2.5 0 016.5 17H20V4H6.5A2.5 2.5 0 004 6.5v13z"/><path d="M4 19.5A2.5 2.5 0 006.5 22H20v-5"/></svg>内容模板</button>
+      <button data-view="example"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 3"/></svg>示例流程</button>
+      <button data-view="todos"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2h11"/></svg>发布与待办<span class="count" id="navTodoCount">0</span></button>
+    </nav>
+    <div class="side-card">
+      <h4>让想法，有个去处。</h4>
+      <p>留住日常的小观察，慢慢做成值得分享的内容。</p>
+      <button data-goto="example">走一遍示例流程 →</button>
+    </div>
+    <div class="side-foot"><span class="dot"></span>WenSenLab · 开源版<br></div>
+    <div style="padding:2px 8px;font-size:11.5px;color:var(--faint)">数据保存在本地浏览器</div>
+  </aside>
+
+  <!-- Main -->
+  <div class="main">
+    <div class="mobile-top">
+      <div class="brand-mark" style="width:32px;height:32px;font-size:16px;border-radius:9px">W</div>
+      <div style="font-weight:650;font-size:17px">WenSenLab</div>
+      <div style="margin-left:auto"><button class="btn primary small" data-new>+ 记一条</button></div>
+    </div>
+    <nav class="mobile-nav" id="mobileNav">
+      <button data-view="home" class="active">工作概览</button>
+      <button data-view="pool">选题池</button>
+      <button data-view="desk">生产台</button>
+      <button data-view="templates">内容模板</button>
+      <button data-view="example">示例流程</button>
+      <button data-view="todos">发布与待办</button>
+    </nav>
+    <div class="topbar">
+      <span>我的创作空间</span><span>›</span><span class="crumb-now" id="crumb">工作概览</span>
+      <span class="spacer"></span>
+      <span class="local-tag">开源版 · 本地存储，无需账号</span>
+      <button class="btn primary" data-new>+ 记一条灵感</button>
+    </div>
+
+    <!-- ============ HOME ============ -->
+    <section class="view active" id="view-home">
+      <div class="eyebrow">WENSENLAB CONTENT STUDIO</div>
+      <h1 class="hero">把灵感，慢慢做成作品。</h1>
+      <p class="hero-sub">从一条观察开始，让每个值得分享的想法继续往前走。</p>
+      <div class="stats">
+        <div class="stat"><div class="lbl">收集中的灵感</div><div class="num" id="stInbox">00</div><div class="hint">先记下来，再慢慢想</div></div>
+        <div class="stat"><div class="lbl">正在推进</div><div class="num" id="stDoing">00</div><div class="hint">让好选题往前一步</div></div>
+        <div class="stat"><div class="lbl">等待校对</div><div class="num" id="stCheck">00</div><div class="hint">再看一遍，就能出发</div></div>
+        <div class="stat"><div class="lbl">已发布内容</div><div class="num" id="stPub">00</div><div class="hint">每一份积累，都算数</div></div>
+      </div>
+      <div class="banner">
+        <span class="tag">从想法到发布</span>
+        <h2>一条观察，可以有不止一种讲法。</h2>
+        <p>先把事实和观点分清，再拆成短图文、观点海报或工作流。从同一份素材出发，保留每个平台自己的节奏。</p>
+        <button class="link" data-goto="example">打开完整示例 →</button>
+        <div class="banner-art">
+          <div class="mini-card" style="left:0;top:6px;width:150px;transform:rotate(-5deg)">01 / 捕捉观察<div style="margin-top:8px;height:5px;background:#dbeafe;border-radius:99px"></div><div style="margin-top:5px;height:5px;width:70%;background:#e7eefb;border-radius:99px"></div></div>
+          <div class="mini-card" style="right:0;top:38px;width:165px;transform:rotate(3deg)">一个清楚的观点<div class="chips"><span>图文</span><span>海报</span><span>工作流</span></div></div>
+        </div>
+      </div>
+
+      <div class="sec-head"><h3>值得继续的选题</h3><span class="n" id="homeCount">0</span><span class="spacer"></span>
+        <button class="link" id="btnExport1">↓ 导出备份</button>
+        <button class="link" data-goto="pool">查看全部 →</button>
+      </div>
+      <div class="tabs" id="homeTabs"></div>
+      <div class="filter-row">
+        <select id="homeStatus"><option value="">全部状态</option><option>灵感池</option><option>创作中</option><option>待校对</option><option>已发布</option></select>
+        <select id="homePrio"><option value="">全部优先级</option><option>高</option><option>中</option><option>低</option></select>
+        <select id="homeSort"><option value="prio">按优先级排序</option><option value="new">按最新排序</option><option value="old">按最早排序</option></select>
+        <div class="search-box"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></svg><input id="homeSearch" type="text" placeholder="搜索选题或素材"></div>
+      </div>
+      <div id="homeList"></div>
+
+      <div class="sec-head"><h3>不用每次从零开始</h3><span class="spacer"></span><button class="link" data-goto="templates">全部模板 →</button></div>
+      <div class="tpl-grid" id="homeTpls"></div>
+
+      <div class="data-bar">
+        <p><b style="color:var(--ink)">开源版说明：</b>这个版本不连服务器，选题、模板和记录都只存在你这台设备的浏览器里。换设备或清缓存前，记得导出一份 JSON 备份。</p>
+        <button class="btn small" id="btnExport2">导出 JSON</button>
+        <button class="btn small" id="btnImport2">导入 JSON</button>
+      </div>
+      <p style="color:var(--faint);font-size:12.5px;margin-top:22px">少一点重复开头，多留一点真实观察。</p>
+    </section>
+
+    <!-- ============ POOL ============ -->
+    <section class="view" id="view-pool">
+      <div class="page-head"><h1>选题池</h1><button class="btn primary small" data-new style="margin-left:auto">+ 记一条灵感</button>
+      <p>观察、实践、案例、Prompt 灵感都先放这里。分好类、标好优先级，不急着写，先攒着。</p></div>
+      <div class="tabs" id="poolTabs"></div>
+      <div class="filter-row">
+        <select id="poolStatus"><option value="">全部状态</option><option>灵感池</option><option>创作中</option><option>待校对</option><option>已发布</option></select>
+        <select id="poolPrio"><option value="">全部优先级</option><option>高</option><option>中</option><option>低</option></select>
+        <select id="poolSort"><option value="prio">按优先级排序</option><option value="new">按最新排序</option><option value="old">按最早排序</option></select>
+        <div class="search-box"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></svg><input id="poolSearch" type="text" placeholder="搜索选题或素材"></div>
+      </div>
+      <div id="poolList"></div>
+    </section>
+
+    <!-- ============ DESK ============ -->
+    <section class="view" id="view-desk">
+      <div id="deskEmpty">
+        <div class="page-head"><h1>生产台</h1><p>选一个选题进来，我们一步步把它推成能发出去的样子。</p></div>
+        <div class="empty"><div style="font-size:22px;color:var(--blue)">✦</div><h3>先从选题池挑一条</h3><p>还没有在做的选题，去选题池点开任意一条，就会进到这里。</p><div class="row"><button class="btn primary" data-goto="pool">去选题池看看</button><button class="btn" data-new>+ 记一条灵感</button></div></div>
+      </div>
+      <div id="deskMain" style="display:none">
+        <button class="back-btn" data-goto="pool">← 回到选题池</button>
+        <div class="detail-head"><input class="title-in" id="dTitle" type="text" placeholder="给这个选题起个名字"></div>
+        <div class="meta-row">
+          <label>分类<select id="dCat"></select></label>
+          <label>来源类型<select id="dType"><option>日常观察</option><option>AI工具实践</option><option>品牌营销案例</option><option>Prompt灵感</option></select></label>
+          <label>优先级<select id="dPrio"><option>高</option><option>中</option><option>低</option></select></label>
+          <label>状态<select id="dStatus"><option>灵感池</option><option>创作中</option><option>待校对</option><option>已发布</option></select></label>
+          <label>&nbsp;<span style="display:flex;gap:8px"><button class="btn small" id="btnSaveTopic">保存修改</button><button class="btn small danger" id="btnDelTopic">删除选题</button></span></label>
+        </div>
+        <div class="steps" id="stepTabs">
+          <button data-step="1" class="active">1 · 分清事实与判断</button>
+          <button data-step="2">2 · Brief 与观点</button>
+          <button data-step="3">3 · 平台拆分</button>
+          <button data-step="4">4 · 校对与发布</button>
+        </div>
+
+        <div class="panel" data-panel="1">
+          <h3>先分清：什么是事实，什么是我们的看法</h3>
+          <p class="sub">这一步偷懒，后面写得再顺也容易翻车。三栏分开写，来源和原话单独留着。</p>
+          <div class="f3">
+            <div class="field fact-box"><label>事实 <span class="tip">能核对的才放这儿</span></label><textarea id="dFacts" rows="7" placeholder="比如：发布时间、官方说法、具体数据、亲眼看到的现象……"></textarea></div>
+            <div class="field judge-box"><label>判断 <span class="tip">我们基于事实的推论</span></label><textarea id="dJudge" rows="7" placeholder="比如：我们觉得这件事说明了什么、对品牌或创作者意味着什么……"></textarea></div>
+            <div class="field spec-box"><label>推测 <span class="tip">还没证实，先标清楚</span></label><textarea id="dSpec" rows="7" placeholder="比如：接下来可能会怎样、暂时没来源支撑的猜想……"></textarea></div>
+          </div>
+          <div class="two-col">
+            <div class="field"><label>来源 <span class="tip">链接、账号、场合都行</span></label><textarea id="dSource" rows="3" placeholder="原文链接、出处、是谁在什么场合说的……"></textarea></div>
+            <div class="field"><label>原始素材 <span class="tip">原话、截图说明、随手记</span></label><textarea id="dRaw" rows="3" placeholder="把原话或当时的记录原样贴进来，别先改写……"></textarea></div>
+          </div>
+          <button class="btn primary" data-save-step>保存这一步</button>
+        </div>
+
+        <div class="panel" data-panel="2" style="display:none">
+          <h3>把选题收成一页 Brief</h3>
+          <p class="sub">给谁看、想让他记住什么、我们自己的观点是什么——说清楚了，标题自然就出来了。</p>
+          <div class="field"><label>内容 Brief</label><textarea id="dBrief" rows="5" placeholder="一句话说清：这条内容讲什么、给谁看、看完希望他有什么反应……"></textarea></div>
+          <div class="field"><label>核心观点</label><textarea id="dView" rows="4" placeholder="只留一句我们真正想说的。拿不准就先写两个版本，挑顺眼的那个……"></textarea></div>
+          <div class="field"><label>标题候选 <span class="tip">一行一个，多写几个再挑</span></label><textarea id="dTitles" rows="5" placeholder="标题候选 1&#10;标题候选 2&#10;标题候选 3"></textarea></div>
+          <button class="btn primary" data-save-step>保存这一步</button>
+        </div>
+
+        <div class="panel" data-panel="3" style="display:none">
+          <h3>同一份素材，按平台的节奏拆</h3>
+          <p class="sub">小红书看图和第一句，公众号能多讲两句，短内容只留最有劲儿的那一下。分别写，别一稿通发。</p>
+          <div class="plat-tabs" id="platTabs">
+            <button data-plat="xhs" class="active">小红书</button>
+            <button data-plat="gzh">公众号</button>
+            <button data-plat="short">短内容</button>
+          </div>
+          <div class="field"><label id="platLabel">小红书版内容拆分</label><textarea id="dPlat" rows="7" placeholder="按这个平台的习惯，把内容拆成段落、图序或段落提纲……"></textarea></div>
+          <div class="two-col">
+            <div class="field"><label>配文</label><textarea id="dCaption" rows="5" placeholder="发布时配的那段话。口语一点，像跟朋友说话……"></textarea></div>
+            <div class="field"><label>海报 / 图片生成说明</label><textarea id="dPoster" rows="5" placeholder="画面主体、构图、色调、图上文字——写给自己或生成工具看都行……"></textarea></div>
+          </div>
+          <button class="btn primary" data-save-step>保存这一步</button>
+        </div>
+
+        <div class="panel" data-panel="4" style="display:none">
+          <h3>发之前，再一起看一遍</h3>
+          <p class="sub">清单过完，状态改成「已发布」，这条选题就算落地了。</p>
+          <div class="two-col">
+            <div>
+              <div class="field" style="margin-bottom:8px"><label>发布前校对清单</label></div>
+              <ul class="check-list" id="checkList"></ul>
+              <div class="field" style="margin-top:20px"><label>版本记录</label><div class="ver-list" id="verList"></div></div>
+            </div>
+            <div>
+              <div class="field" style="margin-bottom:8px"><label>这条选题的待办</label></div>
+              <ul class="todo-list" id="todoList"></ul>
+              <div class="add-row"><input id="newTodo" type="text" placeholder="加一条待办，回车也行"><button class="btn small" id="btnAddTodo">添加</button></div>
+              <div style="margin-top:22px;display:flex;gap:10px;flex-wrap:wrap"><button class="btn primary" id="btnPublish">标记为已发布</button><button class="btn" data-save-step>保存</button></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============ TEMPLATES ============ -->
+    <section class="view" id="view-templates">
+      <div class="page-head"><h1>内容模板</h1><p>六个常用模板，都是空白的骨架。点「用这个模板」，就会在选题池里开一条新选题，照着填就行。</p></div>
+      <div class="tpl-grid" id="tplGrid"></div>
+      <p style="color:var(--muted);font-size:13.5px;margin-top:20px">模板只是起点，不用被它框住——哪一栏用不上，空着就好。</p>
+    </section>
+
+    <!-- ============ EXAMPLE ============ -->
+    <section class="view" id="view-example">
+      <div class="page-head"><h1>示例流程</h1><p>用一条假的示例，走一遍从随手记到发布稿件的全程。看完就知道这个台子是怎么转的。</p></div>
+      <div class="flow" id="flowSteps"></div>
+      <div style="display:flex;gap:12px;flex-wrap:wrap;margin-top:8px"><button class="btn primary" data-new>试着记第一条</button><button class="btn" data-goto="templates">从模板开始也行</button></div>
+    </section>
+
+    <!-- ============ TODOS ============ -->
+    <section class="view" id="view-todos">
+      <div class="page-head"><h1>发布与待办</h1><p>所有选题的待办汇总在一起，待校对的选题也在这里等最后一遍检查。</p></div>
+      <div class="sec-head"><h3>待校对</h3><span class="n" id="todoCheckCount">0</span></div>
+      <div id="todoCheckList"></div>
+      <div class="sec-head"><h3>未完成待办</h3><span class="n" id="todoOpenCount">0</span></div>
+      <div id="todoAllList"></div>
+      <div class="data-bar">
+        <p><b style="color:var(--ink)">备份提醒：</b>数据只在本地。准备换浏览器或清缓存的话，先导出一份存好。</p>
+        <button class="btn small" id="btnExport3">导出 JSON</button>
+        <button class="btn small" id="btnImport3">导入 JSON</button>
+        <button class="btn small danger" id="btnWipe">清空全部数据</button>
+      </div>
+    </section>
+  </div>
+</div>
+
+<!-- New topic modal -->
+<div class="overlay" id="overlay">
+  <div class="modal">
+    <h3>记一条灵感</h3>
+    <p class="sub">先记下来就行，写得糙没关系，后面在生产台慢慢磨。</p>
+    <div class="field"><label>一句话标题</label><input type="text" id="nTitle" placeholder="比如：楼下咖啡店开始用 AI 点单屏了"></div>
+    <div class="row2">
+      <div class="field"><label>分类</label><select id="nCat" style="width:100%;border:1px solid var(--line);border-radius:12px;padding:11px;background:#fff"></select></div>
+      <div class="field"><label>来源类型</label><select id="nType" style="width:100%;border:1px solid var(--line);border-radius:12px;padding:11px;background:#fff"><option>日常观察</option><option>AI工具实践</option><option>品牌营销案例</option><option>Prompt灵感</option></select></div>
+    </div>
+    <div class="row2">
+      <div class="field"><label>优先级</label><select id="nPrio" style="width:100%;border:1px solid var(--line);border-radius:12px;padding:11px;background:#fff"><option>中</option><option>高</option><option>低</option></select></div>
+      <div class="field"><label>先记在</label><select id="nStatus" style="width:100%;border:1px solid var(--line);border-radius:12px;padding:11px;background:#fff"><option>灵感池</option><option>创作中</option></select></div>
+    </div>
+    <div class="field"><label>顺手写两句 <span class="tip" style="color:var(--muted);font-weight:400">（可选，会放进原始素材）</span></label><textarea id="nRaw" rows="3" placeholder="看到什么、听到什么原话，先原样记着……"></textarea></div>
+    <div class="foot"><button class="btn" id="btnCancelNew">取消</button><button class="btn primary" id="btnCreateNew">存进选题池</button></div>
+  </div>
+</div>
+<input type="file" id="fileImport" accept="application/json,.json" style="display:none">
+<div class="toast" id="toast"></div>
+
+<script>
+var CATS=["AI模型","Agent","品牌营销","广告行业","商业案例","Prompt实战"];
+var CHECKS=["事实都核对过出处，没有把推测写成事实","来源和原始素材留全了，日后能追溯","标题说的是真话，没有夸大和标题党","配图 / 海报和内容对得上，图上文字没错字","平台版本各自顺过一遍，不是同一稿复制","配文口语自然，读出来不别扭"];
+var TEMPLATES=[
+ {name:"日常观察",cat:"品牌营销",type:"日常观察",desc:"从空白模板开始",hint:"记下现象本身，先别急着下结论。",facts:"时间、地点、亲眼看到的现象……",raw:"当时的原话或随手记……"},
+ {name:"AI 工具实践",cat:"AI模型",type:"AI工具实践",desc:"从空白模板开始",hint:"我们实际怎么用的、哪步卡住了，比功能介绍有用。",facts:"工具名、版本、我们的操作步骤……",raw:"用到的 Prompt 原文……"},
+ {name:"品牌营销案例",cat:"品牌营销",type:"品牌营销案例",desc:"从空白模板开始",hint:"先把品牌做了什么说清，再谈我们怎么看。",facts:"品牌动作、时间、公开数据……",raw:"官方文案或活动页要点……"},
+ {name:"广告行业观察",cat:"广告行业",type:"日常观察",desc:"从空白模板开始",hint:"行业里的新变化，落到具体的人和事上。",facts:"事件、涉及的公司与公开说法……",raw:"报道或当事人原话……"},
+ {name:"商业案例拆解",cat:"商业案例",type:"品牌营销案例",desc:"从空白模板开始",hint:"拆它为什么这么做、赚的是哪部分的钱。",facts:"商业动作、价格、渠道等公开信息……",raw:"财报或采访里的关键句……"},
+ {name:"Prompt 实战",cat:"Prompt实战",type:"Prompt灵感",desc:"从空白模板开始",hint:"留全 Prompt 原文和迭代过程，方便复用。",facts:"使用场景、模型、每一版的改动……",raw:"Prompt 原文（完整保留）……"}
+];
+var FLOW=[
+ {t:"随手记一条观察",p:"看到什么先记什么，不用想标题，更不用想结论。这一步只管把东西留住。",ex:"<b>示例记录：</b>小区门口的奶茶店换了块 AI 点单屏，排队时店员在旁边逐个教大家用，老顾客反而更慢了。"},
+ {t:"归类，标优先级",p:"放进六个分类里，再给个大致优先级。不确定的先放「中」，以后翻到再调整。",ex:"<b>示例：</b>分类选「品牌营销」，来源类型「日常观察」，优先级「中」，状态先进灵感池。"},
+ {t:"分清事实、判断和推测",p:"把能核对的放进事实栏，我们的看法放判断栏，没证实的猜想老实标成推测，来源和原话单独留着。",ex:"<b>事实：</b>门店上线了 AI 点单屏，高峰期店员需要人工协助。 <b>判断：</b>自助设备省的是点单人力，没省解释成本。 <b>推测：</b>这类设备可能更适合标准化程度高的连锁快餐。"},
+ {t:"收成 Brief 和核心观点",p:"一句话说清讲给谁听、希望他记住什么；观点只留一句，标题从观点里长出来，多写几个再挑。",ex:"<b>核心观点：</b>智能化的账不能只算省了几个人，还要算教会用户要花多少人。"},
+ {t:"按平台拆分，写配文和海报说明",p:"同一份素材，小红书拆成图序，公众号多讲两句来龙去脉，短内容只留最有劲儿的一下。海报说明写清主体、构图和图上文字。",ex:"<b>小红书：</b>图 1 现场照片感画面，图 2 排队实况，图 3 我们的观点卡。 <b>海报说明：</b>奶茶店柜台场景，点单屏居中，图上只放观点那一句。"},
+ {t:"过一遍校对清单",p:"事实出处、标题有没有夸大、图上文字有没有错字、每个平台版本有没有单独顺过——逐项确认。",ex:"<b>示例：</b>示例里的门店细节属于虚构演示，正式发布时要换成我们真实观察到的门店和记录。"},
+ {t:"发布，并把状态改成已发布",p:"发完回来改状态、留一条版本记录。以后想复盘，这条内容是怎么来的，一翻就清楚。",ex:"<b>版本记录示例：</b>「从灵感池推进到发布稿，观点收窄为人力账这一条。」"}
+];
+var KEY="wensenlab_open_v1";
+var state={topics:[],currentId:null,step:1,plat:"xhs",homeCat:"",poolCat:""};
+function uid(){return "t"+Date.now().toString(36)+Math.random().toString(36).slice(2,7)}
+function load(){try{var raw=localStorage.getItem(KEY);if(raw){state.topics=JSON.parse(raw).topics||[]}}catch(e){state.topics=[]}}
+function save(){try{localStorage.setItem(KEY,JSON.stringify({app:"WenSenLab",version:1,exportedAt:new Date().toISOString(),topics:state.topics}))}catch(e){toast("本地存储空间不够了，先导出备份再清理")}}
+function nowStr(){var d=new Date();return d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0")+" "+String(d.getHours()).padStart(2,"0")+":"+String(d.getMinutes()).padStart(2,"0")}
+function esc(s){return String(s==null?"":s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;")}
+function toast(msg){var t=document.getElementById("toast");t.textContent=msg;t.classList.add("show");setTimeout(function(){t.classList.remove("show")},2200)}
+function cur(){for(var i=0;i<state.topics.length;i++){if(state.topics[i].id===state.currentId)return state.topics[i]}return null}
+function todoProgress(t){if(!t.todos||!t.todos.length)return 0;var d=t.todos.filter(function(x){return x.done}).length;return Math.round(d/t.todos.length*100)}
+function newTopic(data){
+ var t={id:uid(),title:data.title||"未命名选题",category:data.category||"品牌营销",type:data.type||"日常观察",priority:data.priority||"中",status:data.status||"灵感池",createdAt:nowStr(),updatedAt:nowStr(),facts:data.facts||"",judgements:"",speculations:"",source:"",raw:data.raw||"",brief:"",viewpoint:"",titles:"",plats:{xhs:"",gzh:"",short:""},captions:{xhs:"",gzh:"",short:""},posters:{xhs:"",gzh:"",short:""},checks:CHECKS.map(function(){return false}),todos:[{id:uid(),text:"补齐事实、判断、推测三栏",done:false},{id:uid(),text:"写出核心观点和 3 个标题候选",done:false},{id:uid(),text:"选一个平台先拆分，过校对清单",done:false}],versions:[{at:nowStr(),note:"新建选题"}]};
+ state.topics.unshift(t);save();return t;
+}
+/* ---------- navigation ---------- */
+var VIEWNAMES={home:"工作概览",pool:"选题池",desk:"生产台",templates:"内容模板",example:"示例流程",todos:"发布与待办"};
+function goto(view){
+ document.querySelectorAll(".view").forEach(function(v){v.classList.remove("active")});
+ var el=document.getElementById("view-"+view);if(el)el.classList.add("active");
+ document.querySelectorAll("#sideNav button,#mobileNav button").forEach(function(b){b.classList.toggle("active",b.getAttribute("data-view")===view)});
+ document.getElementById("crumb").textContent=VIEWNAMES[view]||"";
+ if(view==="desk")renderDesk(); if(view==="todos")renderTodos(); if(view==="home")renderHome(); if(view==="pool")renderPool();
+ window.scrollTo({top:0});
+}
+document.querySelectorAll("[data-view]").forEach(function(b){b.addEventListener("click",function(){goto(b.getAttribute("data-view"))})});
+document.querySelectorAll("[data-goto]").forEach(function(b){b.addEventListener("click",function(){goto(b.getAttribute("data-goto"))})});
+/* ---------- filters / cards ---------- */
+function tabsHTML(active){var h='<button data-cat="" class="'+(active===""?"active":"")+'">全部</button>';CATS.forEach(function(c){h+='<button data-cat="'+c+'" class="'+(active===c?"active":"")+'">'+c+'</button>'});return h}
+function bindTabs(id,key,rerender){var box=document.getElementById(id);box.innerHTML=tabsHTML(state[key]);box.querySelectorAll("button").forEach(function(b){b.addEventListener("click",function(){state[key]=b.getAttribute("data-cat");box.innerHTML=tabsHTML(state[key]);bindTabs(id,key,rerender);rerender()})})}
+function filterTopics(cat,q,status,prio,sort){
+ var list=state.topics.filter(function(t){
+  if(cat&&t.category!==cat)return false;
+  if(status&&t.status!==status)return false;
+  if(prio&&t.priority!==prio)return false;
+  if(q){var s=(t.title+" "+(t.raw||"")+" "+(t.facts||"")+" "+t.category).toLowerCase();if(s.indexOf(q.toLowerCase())<0)return false}
+  return true;
+ });
+ var pw={"高":0,"中":1,"低":2};
+ if(sort==="prio")list.sort(function(a,b){return pw[a.priority]-pw[b.priority]||(a.createdAt<b.createdAt?1:-1)});
+ else if(sort==="new")list.sort(function(a,b){return a.createdAt<b.createdAt?1:-1});
+ else if(sort==="old")list.sort(function(a,b){return a.createdAt>b.createdAt?1:-1});
+ return list;
+}
+function cardHTML(t){
+ var desc=t.raw||t.facts||t.brief||"还没写素材，点进去补两句。";
+ return '<article class="tcard" data-open="'+t.id+'"><span class="pill">'+esc(t.category)+'</span> <span class="pill p-'+t.priority+'">优先级 · '+t.priority+'</span> <span class="pill st-'+t.status+'">'+t.status+'</span><h4>'+esc(t.title)+'</h4><p>'+esc(desc)+'</p><div class="meta"><span>'+esc(t.type)+'</span><span>·</span><span>更新于 '+esc(t.updatedAt)+'</span><span>·</span><span>待办完成 '+todoProgress(t)+'%</span></div><div class="progress"><i style="width:'+todoProgress(t)+'%"></i></div></article>';
+}
+function emptyHTML(){return '<div class="empty"><div style="font-size:22px;color:var(--blue)">✦</div><h3>第一条观察，从这里开始。</h3><p>记下一个现象、一段原话，或一个还没想清楚的念头。</p><div class="row"><button class="btn primary" data-new>+ 记一条灵感</button><button class="btn" data-goto="example">先看看完整示例 →</button></div></div>'}
+function bindCards(container){
+ container.querySelectorAll("[data-open]").forEach(function(c){c.addEventListener("click",function(){state.currentId=c.getAttribute("data-open");goto("desk")})});
+ container.querySelectorAll("[data-new]").forEach(function(b){b.addEventListener("click",openNew)});
+ container.querySelectorAll("[data-goto]").forEach(function(b){b.addEventListener("click",function(){goto(b.getAttribute("data-goto"))})});
+}
+function renderHome(){
+ var counts={a:0,b:0,c:0,d:0};
+ state.topics.forEach(function(t){if(t.status==="灵感池")counts.a++;if(t.status==="创作中")counts.b++;if(t.status==="待校对")counts.c++;if(t.status==="已发布")counts.d++});
+ function pad(n){return String(n).padStart(2,"0")}
+ document.getElementById("stInbox").textContent=pad(counts.a);
+ document.getElementById("stDoing").textContent=pad(counts.b);
+ document.getElementById("stCheck").textContent=pad(counts.c);
+ document.getElementById("stPub").textContent=pad(counts.d);
+ document.getElementById("navCount").textContent=state.topics.length;
+ var openTodos=0;state.topics.forEach(function(t){(t.todos||[]).forEach(function(x){if(!x.done)openTodos++})});
+ document.getElementById("navTodoCount").textContent=openTodos;
+ var list=filterTopics(state.homeCat,document.getElementById("homeSearch").value,document.getElementById("homeStatus").value,document.getElementById("homePrio").value,document.getElementById("homeSort").value);
+ document.getElementById("homeCount").textContent=list.length;
+ var box=document.getElementById("homeList");
+ box.innerHTML=list.length?'<div class="grid">'+list.map(cardHTML).join("")+'</div>':(state.topics.length?'<div class="empty"><h3>这个筛选下暂时没有</h3><p>换个分类或清一下搜索词，再看看。</p></div>':emptyHTML());
+ bindCards(box);
+ var tg=document.getElementById("homeTpls");
+ tg.innerHTML=TEMPLATES.slice(0,4).map(tplHTML).join("");
+ bindTpls(tg);
+}
+function renderPool(){
+ var list=filterTopics(state.poolCat,document.getElementById("poolSearch").value,document.getElementById("poolStatus").value,document.getElementById("poolPrio").value,document.getElementById("poolSort").value);
+ var box=document.getElementById("poolList");
+ box.innerHTML=list.length?'<div class="grid">'+list.map(cardHTML).join("")+'</div>':(state.topics.length?'<div class="empty"><h3>这个筛选下暂时没有</h3><p>换个分类或清一下搜索词，再看看。</p></div>':emptyHTML());
+ bindCards(box);
+}
+/* ---------- templates ---------- */
+var TPLICONS=["◎","✳","◇","⬡","△","⌘"];
+function tplHTML(t,i){return '<div class="tpl"><div class="ic">'+TPLICONS[i%6]+'</div><h4>'+esc(t.name)+'</h4><p>'+esc(t.desc)+' · '+esc(t.cat)+'</p><button data-tpl="'+i+'">用这个模板 +</button></div>'}
+function bindTpls(scope){
+ scope.querySelectorAll("[data-tpl]").forEach(function(b){b.addEventListener("click",function(){
+  var t=TEMPLATES[Number(b.getAttribute("data-tpl"))];
+  var nt=newTopic({title:t.name+"（待改题）",category:t.cat,type:t.type,priority:"中",status:"灵感池",facts:"",raw:""});
+  nt.facts=t.facts;nt.raw=t.raw;nt.brief=t.hint;nt.versions.push({at:nowStr(),note:"从模板「"+t.name+"」新建"});save();
+  state.currentId=nt.id;toast("已经用模板开好了一条，去改标题吧");goto("desk");renderAll();
+ })});
+}
+function renderTemplates(){var g=document.getElementById("tplGrid");g.innerHTML=TEMPLATES.map(tplHTML).join("");bindTpls(g)}
+/* ---------- example ---------- */
+function renderFlow(){
+ document.getElementById("flowSteps").innerHTML=FLOW.map(function(s,i){return '<div class="fstep"><div class="rail"><div class="n">'+(i+1)+'</div><div class="line"></div></div><div class="body"><h4>'+esc(s.t)+'</h4><p>'+esc(s.p)+'</p><div class="ex">'+s.ex+'</div></div></div>'}).join("");
+}
+/* ---------- desk ---------- */
+function fillCats(sel,val){sel.innerHTML=CATS.map(function(c){return '<option'+(c===val?" selected":"")+'>'+c+'</option>'}).join("")}
+function renderDesk(){
+ var t=cur();
+ document.getElementById("deskEmpty").style.display=t?"none":"block";
+ document.getElementById("deskMain").style.display=t?"block":"none";
+ if(!t)return;
+ document.getElementById("dTitle").value=t.title;
+ fillCats(document.getElementById("dCat"),t.category);
+ document.getElementById("dType").value=t.type;document.getElementById("dPrio").value=t.priority;document.getElementById("dStatus").value=t.status;
+ document.getElementById("dFacts").value=t.facts||"";document.getElementById("dJudge").value=t.judgements||"";document.getElementById("dSpec").value=t.speculations||"";
+ document.getElementById("dSource").value=t.source||"";document.getElementById("dRaw").value=t.raw||"";
+ document.getElementById("dBrief").value=t.brief||"";document.getElementById("dView").value=t.viewpoint||"";document.getElementById("dTitles").value=t.titles||"";
+ showStep(state.step);showPlat(state.plat);renderChecks();renderTodosInDesk();renderVersions();
+}
+function collectDesk(){
+ var t=cur();if(!t)return null;
+ t.title=document.getElementById("dTitle").value.trim()||t.title;
+ t.category=document.getElementById("dCat").value;t.type=document.getElementById("dType").value;t.priority=document.getElementById("dPrio").value;t.status=document.getElementById("dStatus").value;
+ t.facts=document.getElementById("dFacts").value;t.judgements=document.getElementById("dJudge").value;t.speculations=document.getElementById("dSpec").value;
+ t.source=document.getElementById("dSource").value;t.raw=document.getElementById("dRaw").value;
+ t.brief=document.getElementById("dBrief").value;t.viewpoint=document.getElementById("dView").value;t.titles=document.getElementById("dTitles").value;
+ t.plats[state.plat]=document.getElementById("dPlat").value;t.captions[state.plat]=document.getElementById("dCaption").value;t.posters[state.plat]=document.getElementById("dPoster").value;
+ t.updatedAt=nowStr();return t;
+}
+function saveStep(note){
+ var t=collectDesk();if(!t)return;
+ t.versions.push({at:nowStr(),note:note||("保存了第 "+state.step+" 步")});save();renderVersions();renderAll(false);toast("存好了，版本记录里留了一笔");
+}
+function showStep(n){
+ state.step=n;
+ document.querySelectorAll("#stepTabs button").forEach(function(b){b.classList.toggle("active",Number(b.getAttribute("data-step"))===n)});
+ document.querySelectorAll("[data-panel]").forEach(function(p){p.style.display=Number(p.getAttribute("data-panel"))===n?"block":"none"});
+}
+document.querySelectorAll("#stepTabs button").forEach(function(b){b.addEventListener("click",function(){var t=cur();if(t)collectDesk(),save();showStep(Number(b.getAttribute("data-step")))})});
+var PLATNAMES={xhs:"小红书版内容拆分",gzh:"公众号版内容拆分",short:"短内容版拆分（观点碎片 / 动态）"};
+function showPlat(p){
+ var t=cur();if(!t)return;
+ if(state.plat!==p){t.plats[state.plat]=document.getElementById("dPlat").value;t.captions[state.plat]=document.getElementById("dCaption").value;t.posters[state.plat]=document.getElementById("dPoster").value}
+ state.plat=p;
+ document.querySelectorAll("#platTabs button").forEach(function(b){b.classList.toggle("active",b.getAttribute("data-plat")===p)});
+ document.getElementById("platLabel").textContent=PLATNAMES[p];
+ document.getElementById("dPlat").value=t.plats[p]||"";document.getElementById("dCaption").value=t.captions[p]||"";document.getElementById("dPoster").value=t.posters[p]||"";
+}
+document.querySelectorAll("#platTabs button").forEach(function(b){b.addEventListener("click",function(){showPlat(b.getAttribute("data-plat"))})});
+function renderChecks(){
+ var t=cur();if(!t)return;
+ document.getElementById("checkList").innerHTML=CHECKS.map(function(c,i){return '<li><button class="tgl'+(t.checks[i]?" on":"")+'" data-check="'+i+'">'+(t.checks[i]?"✓":"")+'</button><span>'+esc(c)+'</span></li>'}).join("");
+ document.querySelectorAll("[data-check]").forEach(function(b){b.addEventListener("click",function(){var i=Number(b.getAttribute("data-check"));t.checks[i]=!t.checks[i];save();renderChecks()})});
+}
+function renderTodosInDesk(){
+ var t=cur();if(!t)return;
+ var ul=document.getElementById("todoList");
+ ul.innerHTML=(t.todos||[]).map(function(x){return '<li class="'+(x.done?"done":"")+'"><button class="tgl'+(x.done?" on":"")+'" data-todo="'+x.id+'">'+(x.done?"✓":"")+'</button><span>'+esc(x.text)+'</span><button class="del" data-deltodo="'+x.id+'" title="删除">×</button></li>'}).join("")||'<li style="color:var(--muted)">还没有待办，下面加一条。</li>';
+ ul.querySelectorAll("[data-todo]").forEach(function(b){b.addEventListener("click",function(){var id=b.getAttribute("data-todo");t.todos.forEach(function(x){if(x.id===id)x.done=!x.done});save();renderTodosInDesk();renderAll(false)})});
+ ul.querySelectorAll("[data-deltodo]").forEach(function(b){b.addEventListener("click",function(){var id=b.getAttribute("data-deltodo");t.todos=t.todos.filter(function(x){return x.id!==id});save();renderTodosInDesk();renderAll(false)})});
+}
+function addTodo(){
+ var t=cur();if(!t)return;var inp=document.getElementById("newTodo");var v=inp.value.trim();if(!v)return;
+ t.todos.push({id:uid(),text:v,done:false});inp.value="";save();renderTodosInDesk();renderAll(false);toast("待办加上了");
+}
+document.getElementById("btnAddTodo").addEventListener("click",addTodo);
+document.getElementById("newTodo").addEventListener("keydown",function(e){if(e.key==="Enter")addTodo()});
+function renderVersions(){
+ var t=cur();if(!t)return;
+ var vs=(t.versions||[]).slice().reverse();
+ document.getElementById("verList").innerHTML=vs.length?vs.map(function(v){return '<div><b>'+esc(v.at)+'</b> · '+esc(v.note)+'</div>'}).join(""):'<div style="color:var(--muted)">还没有版本记录。</div>';
+}
+document.querySelectorAll("[data-save-step]").forEach(function(b){b.addEventListener("click",function(){saveStep()})});
+document.getElementById("btnSaveTopic").addEventListener("click",function(){saveStep("更新了选题信息")});
+document.getElementById("btnDelTopic").addEventListener("click",function(){
+ var t=cur();if(!t)return;
+ if(!window.__confirmDel){window.__confirmDel=true;this.textContent="再点一次确认删除";var self=this;setTimeout(function(){window.__confirmDel=false;self.textContent="删除选题"},2600);return}
+ state.topics=state.topics.filter(function(x){return x.id!==t.id});state.currentId=null;window.__confirmDel=false;save();toast("这条选题删掉了");renderAll();goto("pool");
+});
+document.getElementById("btnPublish").addEventListener("click",function(){
+ var t=collectDesk();if(!t)return;
+ var left=t.checks.filter(function(c){return !c}).length;
+ t.status="已发布";document.getElementById("dStatus").value="已发布";
+ t.versions.push({at:nowStr(),note:left?("标记为已发布（校对清单还有 "+left+" 项没勾）"):"标记为已发布，校对清单已过完"});
+ save();renderVersions();renderAll(false);toast(left?"已标记发布，清单还有 "+left+" 项没勾，心里有数就行":"发布完成，这条落地了");
+});
+/* ---------- todos view ---------- */
+function renderTodos(){
+ var checks=state.topics.filter(function(t){return t.status==="待校对"});
+ document.getElementById("todoCheckCount").textContent=checks.length;
+ document.getElementById("todoCheckList").innerHTML=checks.length?'<div class="grid">'+checks.map(cardHTML).join("")+'</div>':'<div class="empty" style="padding:34px"><p style="margin:0">暂时没有等校对的选题。</p></div>';
+ bindCards(document.getElementById("todoCheckList"));
+ var rows=[];
+ state.topics.forEach(function(t){(t.todos||[]).forEach(function(x){if(!x.done)rows.push({t:t,x:x})})});
+ document.getElementById("todoOpenCount").textContent=rows.length;
+ document.getElementById("todoAllList").innerHTML=rows.length?'<ul class="todo-list">'+rows.map(function(r){return '<li><button class="tgl" data-tt="'+r.t.id+'" data-tx="'+r.x.id+'"></button><span>'+esc(r.x.text)+'</span><span style="margin-left:auto;font-size:12.5px;color:var(--muted)">'+esc(r.t.title)+'</span></li>'}).join("")+'</ul>':'<div class="empty" style="padding:34px"><p style="margin:0">待办都清完了，难得。</p></div>';
+ document.querySelectorAll("[data-tt]").forEach(function(b){b.addEventListener("click",function(){
+  var t=null;state.topics.forEach(function(x){if(x.id===b.getAttribute("data-tt"))t=x});
+  if(t)t.todos.forEach(function(x){if(x.id===b.getAttribute("data-tx"))x.done=true});
+  save();renderTodos();renderAll(false);
+ })});
+}
+/* ---------- new topic modal ---------- */
+function openNew(){fillCats(document.getElementById("nCat"),"品牌营销");document.getElementById("overlay").classList.add("open");setTimeout(function(){document.getElementById("nTitle").focus()},60)}
+function closeNew(){document.getElementById("overlay").classList.remove("open")}
+document.querySelectorAll("[data-new]").forEach(function(b){b.addEventListener("click",openNew)});
+document.getElementById("btnCancelNew").addEventListener("click",closeNew);
+document.getElementById("overlay").addEventListener("click",function(e){if(e.target===this)closeNew()});
+document.getElementById("btnCreateNew").addEventListener("click",function(){
+ var title=document.getElementById("nTitle").value.trim();
+ if(!title){toast("先写个标题，哪怕是临时的");return}
+ var t=newTopic({title:title,category:document.getElementById("nCat").value,type:document.getElementById("nType").value,priority:document.getElementById("nPrio").value,status:document.getElementById("nStatus").value,raw:document.getElementById("nRaw").value.trim()});
+ document.getElementById("nTitle").value="";document.getElementById("nRaw").value="";
+ closeNew();state.currentId=t.id;toast("记下了，去生产台慢慢磨也行，先放着也行");renderAll();goto("desk");
+});
+/* ---------- import / export ---------- */
+function doExport(){
+ var data={app:"WenSenLab",version:1,exportedAt:new Date().toISOString(),topics:state.topics};
+ var blob=new Blob([JSON.stringify(data,null,2)],{type:"application/json"});
+ var a=document.createElement("a");a.href=URL.createObjectURL(blob);a.download="wensenlab-backup-"+new Date().toISOString().slice(0,10)+".json";document.body.appendChild(a);a.click();a.remove();
+ setTimeout(function(){URL.revokeObjectURL(a.href)},2000);toast("备份文件下载好了，收好它");
+}
+function doImport(){document.getElementById("fileImport").click()}
+document.getElementById("fileImport").addEventListener("change",function(){
+ var f=this.files[0];if(!f)return;
+ var r=new FileReader();
+ r.onload=function(){
+  try{var d=JSON.parse(r.result);var list=Array.isArray(d)?d:d.topics;if(!Array.isArray(list))throw new Error("bad");
+   state.topics=list;state.currentId=null;save();renderAll();toast("导入完成，一共 "+list.length+" 条选题");
+  }catch(e){toast("这个文件读不了，确认一下是不是之前导出的 JSON")}
+ };
+ r.readAsText(f);this.value="";
+});
+["btnExport1","btnExport2","btnExport3"].forEach(function(id){var el=document.getElementById(id);if(el)el.addEventListener("click",doExport)});
+["btnImport2","btnImport3"].forEach(function(id){var el=document.getElementById(id);if(el)el.addEventListener("click",doImport)});
+document.getElementById("btnWipe").addEventListener("click",function(){
+ if(!window.__confirmWipe){window.__confirmWipe=true;this.textContent="再点一次，确认清空";var self=this;setTimeout(function(){window.__confirmWipe=false;self.textContent="清空全部数据"},2600);return}
+ state.topics=[];state.currentId=null;window.__confirmWipe=false;this.textContent="清空全部数据";save();renderAll();goto("home");toast("都清掉了，干净重新开始");
+});
+/* ---------- filter listeners ---------- */
+[["homeSearch","homeStatus","homePrio","homeSort",renderHome],["poolSearch","poolStatus","poolPrio","poolSort",renderPool]].forEach(function(g){
+ g.slice(0,4).forEach(function(id){var el=document.getElementById(id);el.addEventListener("input",g[4]);el.addEventListener("change",g[4])});
+});
+function renderAll(rerenderDeskToo){
+ renderHome();renderPool();renderTemplates();
+ document.getElementById("navCount").textContent=state.topics.length;
+ if(rerenderDeskToo!==false&&document.getElementById("view-desk").classList.contains("active"))renderDesk();
+}
+/* ---------- init ---------- */
+load();
+bindTabs("homeTabs","homeCat",renderHome);
+bindTabs("poolTabs","poolCat",renderPool);
+renderFlow();renderAll(false);
+</script>
+</body>
+</html>
