@@ -17,7 +17,7 @@
 
 ## 在线 Demo
 
-👉 **[在线体验](https://wensenlab.github.io/wensenlab-content-studio/)**
+👉 **[在线体验](https://wensenlab.github.io/wensen-content-studio/)**
 
 Demo 打开就能用，你录入的内容只存在你自己的浏览器里，不会上传到任何地方。
 
